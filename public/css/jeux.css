@@ -1,0 +1,853 @@
+* {
+    box-sizing: border-box;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script:wght@400;600&display=swap');
+
+*:focus {
+    outline: none;
+}
+
+body {
+    font-family: Arial;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: fit-content;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login {
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+.login-screen {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+}
+
+.app-title {
+    text-align: center;
+    color: #777;
+}
+
+.login-form {
+    text-align: center;
+}
+.control-group {
+    margin-bottom: 10px;
+}
+
+input {
+    text-align: center;
+    background-color: #ecf0f1;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 200;
+    padding: 10px 0;
+    width: 100%;
+    transition: border 0.5s;
+}
+
+input:focus {
+    border: 2px solid #00275d;
+    box-shadow: none;
+}
+
+.btn {
+    border: 2px solid transparent;
+    background: #00347d;
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 25px;
+    padding: 10px 0;
+    text-decoration: none;
+    text-shadow: none;
+    border-radius: 10px;
+    box-shadow: none;
+    transition: 0.25s;
+    display: block;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.btn:hover {
+    background-color: #07449b;
+    color: white;
+    cursor: pointer;
+}
+
+.login-link {
+    font-size: 12px;
+    color: #444;
+    display: block;
+    margin-top: 12px;
+}
+
+.welcome-screen {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.welcome-logo{
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.welcome-logo img {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 1rem;
+}
+
+.welcome-content {
+    margin-bottom: 30px;
+    color: #777;
+}
+
+.welcome-content h1 {
+    font-weight: 700;
+}
+
+.welcome-content p {
+    size: 8px !important;
+}
+
+
+.roulette-container {
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+}
+
+.roulette-wheel {
+    max-width: 180px;
+    animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+.floating-icon {
+    position: absolute;
+    color: #ff0000;
+    opacity: 0.6;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Positionnement des icônes autour de la roue */
+.icon-1 { top: 0; left: 10%; font-size: 24px; animation-delay: 0s; }
+.icon-2 { top: 10%; right: 10%; font-size: 30px; animation-delay: 1s; }
+.icon-3 { bottom: 0; left: 12%; font-size: 20px; animation-delay: 2s; }
+.icon-4 { bottom: 10%; right: 8%; font-size: 26px; animation-delay: 0.5s; }
+
+.btn-back-floating {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7d1900;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    text-decoration: none;
+    font-size: 20px;
+    z-index: 1000;
+    transition: 0.3s;
+}
+
+.btn-back-floating:hover {
+    background-color: #7d1900;
+    color: #fff;
+}
+
+/* Saint Valentin - inscription */
+.valentine-register {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 20px 16px 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.valentine-layout {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 4rem;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
+
+.valentine-decor {
+    position: absolute;
+    width: 120px;
+    height: auto;
+    opacity: 0.85;
+    top: 12%;
+    right: 6%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.valentine-card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    margin: 0;
+}
+
+.valentine-card .login-screen {
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.valentine-card .app-title h1 {
+    color: #7d1900;
+    letter-spacing: 0.5px;
+}
+
+.valentine-card .app-title {
+    margin-top: 0;
+}
+
+.valentine-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    width: 100%;
+    position: absolute;
+    top: 40px;
+    left: 25px;
+}
+
+.valentine-header .btn-back-floating {
+    position: static;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.valentine-header .app-title h1 {
+    margin: 0;
+    color: #ffffff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    font-size: 1.4rem;
+}
+
+.valentine-card .login-field {
+    background-color: #f8eef0;
+}
+
+.valentine-card .login-field:focus {
+    border: 2px solid #7d1900;
+}
+
+.valentine-btn {
+    background: linear-gradient(135deg, #b3001b, #ff6b6b);
+    color: #ffffff;
+    border-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.valentine-btn:hover {
+    background: linear-gradient(135deg, #8f0016, #ff5252);
+    color: #ffffff;
+}
+
+/* Scratch page */
+.scratch-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 20px 16px 40px;
+}
+
+.scratch-layout {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+    padding-top: 8px;
+}
+
+.scratch-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.scratch-header .btn-back-floating {
+    position: static;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.scratch-header .app-title h1 {
+    margin: 0;
+    color: #ffffff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    font-size: 1.4rem;
+}
+
+.scratch-subtitle {
+    color: #ffffff;
+    text-align: center;
+    font-size: 0.95rem;
+    margin-top: 6px;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.player-position {
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+}
+
+.scratch-card {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    border-radius: 38px;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    margin-top: 1rem;
+}
+
+.scratch-prize {
+    position: absolute;
+    z-index: 1;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+    padding: 0 16px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+.reveal-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #ffffff;
+    border-radius: 18px;
+}
+
+.reveal-overlay.is-active {
+    display: flex;
+}
+
+.reveal-text {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.reveal-gift {
+    font-size: 4.2rem;
+    position: relative;
+    animation: gift-pulse 1.2s ease-in-out infinite;
+}
+
+.reveal-countdown {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+@keyframes gift-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+.scratch-prize-image {
+    position: absolute;
+    z-index: 1;
+    width: 50%;
+    height: 50%;
+    object-fit: contain;
+    border-radius: 12px;
+    background: transparent;
+    padding: 0;
+    transition: transform 0.5s ease;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.scratch-prize-image.is-win {
+    animation: prize-rotate 1.6s ease-in-out;
+}
+
+.scratch-prize-image.is-revealed {
+    transform: scale(1.2);
+    opacity: 1;
+    visibility: visible;
+}
+
+.scratch-prize-image.is-lose {
+    transform: scale(1.28);
+    animation: lose-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes lose-pulse {
+    0% { transform: scale(1.18); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1.18); }
+}
+
+.scratch-result-text {
+    position: absolute;
+    z-index: 5;
+    bottom: -64px;
+    left: 0;
+    right: 0;
+    top: auto;
+    transform: none;
+    text-align: center;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    padding: 0 10px;
+    pointer-events: none;
+    max-width: 320px;
+    margin: 0 auto;
+    line-height: 1.3;
+}
+
+.scratch-result-text.is-win {
+    bottom: -36px;
+}
+
+.scratch-congrats-text {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 60%);
+    text-align: center;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    padding: 0 10px;
+    pointer-events: none;
+    max-width: 240px;
+    margin: 0 auto;
+    line-height: 1.3;
+}
+
+@keyframes prize-rotate {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(10deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+.win-dots {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.win-dots.is-win {
+    opacity: 1;
+}
+
+.win-dots .dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(128, 128, 128, 0.6);
+    animation: pop 1.2s ease-in-out infinite;
+}
+
+.win-dots .dot-1 { top: 18%; left: 22%; animation-delay: 0s; }
+.win-dots .dot-2 { top: 12%; right: 26%; animation-delay: 0.2s; }
+.win-dots .dot-3 { top: 50%; left: 12%; animation-delay: 0.4s; }
+.win-dots .dot-4 { top: 58%; right: 14%; animation-delay: 0.6s; }
+.win-dots .dot-5 { bottom: 18%; left: 30%; animation-delay: 0.8s; }
+.win-dots .dot-6 { bottom: 14%; right: 32%; animation-delay: 1s; }
+
+@keyframes pop {
+    0% { transform: scale(0.7); opacity: 0.4; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.7); opacity: 0.4; }
+}
+
+.scratch-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    cursor: pointer;
+    border-radius: 20px;
+}
+
+.scratch-reset {
+    width: 100%;
+    max-width: 320px;
+}
+
+.lots-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 16px;
+}
+
+.lots-row-text {
+    width: 100%;
+    text-align: center;
+    color: #ffffff;
+    font-size: 2rem;
+    margin-bottom: 4px;
+    font-family: "Brush Script MT", cursive;
+}
+
+.lots-row img {
+    width: 22%;
+    height: 70px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px;
+}
+
+.rgpd-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 14px;
+    font-size: 0.9rem;
+    text-align: left;
+    color: #7d1900;
+}
+
+.rgpd-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.rgpd-row label {
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.rgpd-link {
+    color: #7d1900;
+    text-decoration: underline;
+    font-weight: 600;
+    margin: 0;
+}
+
+.rgpd-text p {
+    color: #222;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+/* Snackbar (Notification d'erreur) */
+#snackbar {
+    visibility: hidden;
+    min-width: 300px;
+    background-color: #680202; /* Rouge pour les erreurs */
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 15px 25px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 30px;
+    font-size: 16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-weight: 500;
+}
+
+#snackbar.show {
+    visibility: visible;
+    -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@keyframes fadein {
+    from {top: 0; opacity: 0;}
+    to {top: 30px; opacity: 1;}
+}
+
+@keyframes fadeout {
+    from {top: 30px; opacity: 1;}
+    to {top: 0; opacity: 0;}
+}
+
+/* Styles pour la roue de jeu (Page Home) */
+.roulette-wrapper {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 20px auto;
+}
+
+.roulette-wrapper .roulette-wheel {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    animation: none; /* Désactive l'animation infinie de l'accueil */
+}
+
+.pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 30px solid #d32f2f; /* Rouge */
+    z-index: 10;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+}
+
+.partners-logo img{
+    margin-top: 0.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* Page grattage - accueil plein ecran */
+.grattage-welcome {
+    min-height: 100vh;
+    width: 100%;
+    padding: 32px 16px;
+}
+
+.grattage-welcome-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.grattage-welcome-container .d-grid {
+    margin-top: auto;
+    margin-bottom: 4rem;
+    padding-inline: 2rem;
+}
+
+.grattage-welcome-container .btn {
+    background: #ffffff;
+    color: #c00000;
+    border-color: #ffffff;
+    text-transform: uppercase;
+    padding-block: 1rem;
+    border-radius: 50px;
+}
+
+.grattage-welcome-container .btn:hover {
+    background: #ffffff;
+    color: #8f0000;
+}
+
+.grattage-welcome-container .welcome-content {
+    text-align: center;
+    color: #ffffff;
+    margin-top: 2rem;
+}
+
+.grattage-welcome-container .welcome-content h1,
+.grattage-welcome-container .welcome-content p {
+    color: #ffffff;
+}
+
+.grattage-welcome-container .welcome-content h1{
+    margin:0;
+}
+
+.grattage-welcome-container .welcome-content p {
+    font-family: "Brush Script MT", cursive;
+    font-size: 3rem;
+    font-weight: 800;
+    margin:0;
+}
+
+.grattage-welcome-container .lots-preview {
+    margin: 44px auto 24px;
+    text-align: center;
+    color: #ffffff;
+}
+
+.grattage-welcome-container .lots-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.grattage-welcome-container .lots-image {
+    width: 90%;
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 20px;
+    row-gap: 28px;
+    align-items: center;
+    justify-items: center;
+}
+
+.grattage-welcome-container .lot-item {
+    text-align: center;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 50%;
+}
+
+/* Effet "poster" : colonnes decalees */
+.grattage-welcome-container .lot-item:nth-child(2),
+.grattage-welcome-container .lot-item:nth-child(4) {
+    transform: translateY(16px);
+}
+
+.grattage-welcome-container .lot-item img {
+    width: 100%;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.18);
+    padding: 6px;
+}
+
+.grattage-welcome-container .lot-caption {
+    font-size: 0.85rem;
+    margin-top: 6px;
+    line-height: 1.3;
+}
+
+.lots-link {
+    display: inline-block;
+    margin: 8px 0 12px;
+    color: #ffffff;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.modal .lots-image {
+    width: 100%;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 14px;
+    row-gap: 18px;
+}
+
+@media (max-width: 576px) {
+    .modal .lots-image {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 10px;
+        row-gap: 12px;
+    }
+}
+
+.modal .lot-item {
+    color: #222;
+    text-align: center;
+    background: linear-gradient(180deg, #fff5f7, #ffffff);
+    border: 1px solid rgba(125, 0, 0, 0.15);
+    border-radius: 14px;
+    padding: 10px 8px;
+    box-shadow: 0 6px 14px rgba(125, 0, 0, 0.08);
+}
+
+.modal .lot-caption {
+    color: #7d1900;
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.modal .lot-item img {
+    height: 110px;
+    background: #fff0f3;
+    border-radius: 12px;
+}
+
+.valentine-modal .modal-content {
+    border-radius: 18px;
+    border: 1px solid rgba(125, 0, 0, 0.2);
+    background: linear-gradient(180deg, #fff8f9, #ffffff);
+    padding: 2rem 1rem;
+}
+
+.valentine-modal .modal-title {
+    color: #7d1900;
+    font-weight: 700;
+}
