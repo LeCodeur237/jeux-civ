@@ -21,6 +21,24 @@
             flex-shrink: 0;
         }
 
+        .pagination {
+            gap: 4px;
+        }
+
+        .pagination .page-link {
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+        }
+
+        .pagination svg {
+            width: 16px;
+            height: 16px;
+        }
+
         .sidebar a {
             color: rgba(255, 255, 255, .8);
             text-decoration: none;
@@ -70,9 +88,12 @@
             {{-- <a href="{{ route('admin.gifts') }}" class="{{ request()->routeIs('admin.gifts') ? 'active' : '' }}">
                 <i class="bi bi-gift me-2"></i> Cadeaux
             </a> --}}
-            <a href="{{ url('/valentines-day') }}" class="mt-auto border-top pt-3">
-                <i class="bi bi-house me-2"></i> Retour au Jeu
-            </a>
+            <form action="{{ url('/logout') }}" method="POST" class="mt-auto border-top pt-3">
+                @csrf
+                <button type="submit" class="btn btn-link p-0 text-start">
+                    <i class="bi bi-box-arrow-right me-2"></i> Déconnexion
+                </button>
+            </form>
         </div>
         <div class="content flex-grow-1">
             @if (session('success'))
