@@ -70,7 +70,7 @@
             {{-- <a href="{{ route('admin.gifts') }}" class="{{ request()->routeIs('admin.gifts') ? 'active' : '' }}">
                 <i class="bi bi-gift me-2"></i> Cadeaux
             </a> --}}
-            <a href="{{ url('/homex') }}" class="mt-auto border-top pt-3">
+            <a href="{{ url('/valentines-day') }}" class="mt-auto border-top pt-3">
                 <i class="bi bi-house me-2"></i> Retour au Jeu
             </a>
         </div>
