@@ -18,9 +18,9 @@ class AdminController extends Controller
     // Gestion des utilisateurs
     public function users()
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(10, ['*'], 'users_page');
         $players = Player::orderBy('created_at', 'desc')->paginate(10, ['*'], 'players_page');
-        return view('admin.users', compact('users', 'players'));
+        $playedCount = Player::where('has_played', true)->count();
+        return view('admin.users', compact('players', 'playedCount'));
     }
 
     // Export CSV des utilisateurs
