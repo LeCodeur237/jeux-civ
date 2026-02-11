@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Player;
 use App\Models\Gift;
 use Illuminate\Support\Facades\Response;
 
@@ -17,8 +18,9 @@ class AdminController extends Controller
     // Gestion des utilisateurs
     public function users()
     {
-        $users = User::orderBy('created_at', 'desc')->get();
-        return view('admin.users', compact('users'));
+        $users = User::orderBy('created_at', 'desc')->paginate(10, ['*'], 'users_page');
+        $players = Player::orderBy('created_at', 'desc')->paginate(10, ['*'], 'players_page');
+        return view('admin.users', compact('users', 'players'));
     }
 
     // Export CSV des utilisateurs
