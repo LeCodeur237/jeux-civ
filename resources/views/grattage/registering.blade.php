@@ -34,10 +34,13 @@
                         style="display: flex; position: relative; margin-bottom: 1.4rem !important;">
                         <input type="text" value="+225" class="login-field" readonly
                             style="width: 70px; border-radius: 10px 0 0 10px; pointer-events: none;">
-                        <input type="tel" name="telephone_input" class="login-field" placeholder="Téléphone" id="reg-phone"
-                            required style="border-radius: 0 10px 10px 0; flex: 1;">
+                        <input type="tel" name="telephone_input" class="login-field" placeholder="0102030405" id="reg-phone"
+                            required pattern="^(?:01|05|07)[0-9]{8}$" inputmode="numeric" maxlength="10" autocomplete="tel"
+                            title="Numéro ivoirien à 10 chiffres, commence par 01, 05 ou 07"
+                            style="border-radius: 0 10px 10px 0; flex: 1;">
                         <label class="login-field-icon fui-chat" for="reg-phone"></label>
                     </div>
+                    <small class="text-muted d-block mb-2">Exemple : 0102030405</small>
 
                     <div class="rgpd-row">
                         <input type="checkbox" id="rgpd-consent" name="is_accept" required>
@@ -82,8 +85,10 @@
             const nom = document.getElementById('reg-nom').value;
             const prenom = document.getElementById('reg-prenom').value;
             const phoneInput = document.getElementById('reg-phone').value;
+            // Normalise: garde seulement les chiffres
+            const cleanedPhone = phoneInput.replace(/\D/g, '');
             // On concatène l'indicatif +225
-            const telephone = '+225' + phoneInput;
+            const telephone = '+225' + cleanedPhone;
             const isAccept = document.getElementById('rgpd-consent').checked;
             const token = document.querySelector('input[name="_token"]').value;
 
@@ -123,6 +128,14 @@
                 btn.innerHTML = originalText;
             });
         });
+
+        const regPhoneInput = document.getElementById('reg-phone');
+        if (regPhoneInput) {
+            regPhoneInput.addEventListener('input', function() {
+                // Garder uniquement les chiffres et limiter à 10
+                this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            });
+        }
     </script>
 
     <div class="modal fade valentine-modal" id="rgpdModal" tabindex="-1" aria-hidden="true">
