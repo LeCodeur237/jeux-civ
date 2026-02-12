@@ -14,8 +14,12 @@
 
     <div class="row g-3">
         @foreach($players as $player)
+        @php
+            $isWinner = $player->has_played && $player->price && $player->price !== 'Perdu';
+            $isLoser = $player->has_played && (!$player->price || $player->price === 'Perdu');
+        @endphp
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100">
+            <div class="card shadow-sm h-100 {{ $isWinner ? 'border border-danger border-2' : '' }} {{ $isLoser ? 'border border-danger border-2' : '' }}">
                 <div class="card-body">
                     <h6 class="mb-2">
                         #{{ $players->firstItem() + $loop->index }} — {{ $player->nom }} {{ $player->prenom }}
