@@ -138,7 +138,7 @@ class AuthController extends Controller
         }
 
         // Détermination du lot côté serveur (compteur sur game_turns)
-        $winningTurns = [21, 50, 55, 60, 65];
+        $winningTurns = [21, 50, 55, 60, 65, 75, 80];
         $turnNumber = GameTurn::count() + 1;
 
         $winningMap = [
@@ -147,6 +147,8 @@ class AuthController extends Controller
             55 => "Un dîner pour deux au restaurant LE LOF",
             60 => "Une prestation d’extension de cils de chez ELIAB",
             65 => "Un somptueux bouquet de roses nature",
+            75 => "Un contrat d’assurance MonAPPUI pour deux",
+            80 => "Un dîner pour deux au restaurant LE LOF",
         ];
 
         $prize = $winningMap[$turnNumber] ?? "Perdu";
