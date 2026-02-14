@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Player;
 use App\Models\Gift;
 use Illuminate\Support\Facades\Response;
@@ -23,11 +22,11 @@ class AdminController extends Controller
         return view('admin.users', compact('players', 'playedCount'));
     }
 
-    // Export CSV des utilisateurs
+    // Export CSV des joueurs (table players)
     public function exportUsersCsv()
     {
-        $users = Player::all();
-        $csvFileName = 'utilisateurs_' . date('Y-m-d_H-i') . '.csv';
+        $players = Player::orderBy('created_at', 'desc')->get();
+        $csvFileName = 'players_' . date('Y-m-d_H-i') . '.csv';
         $headers = [
             "Content-type"        => "text/csv",
             "Content-Disposition" => "attachment; filename=$csvFileName",
@@ -36,22 +35,28 @@ class AdminController extends Controller
             "Expires"             => "0"
         ];
 
-        $callback = function() use($users) {
+        $callback = function () use ($players) {
             $file = fopen('php://output', 'w');
-            // Ajout du BOM pour compatibilité Excel (accents)
+            // Ajout du BOM pour compatibilite Excel (accents)
             fputs($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['ID', 'Nom', 'Prénom', 'Age', 'Profession', 'Téléphone', 'Date Inscription'], ';');
+            fputcsv($file, ['ID', 'Nom', 'Prenom', 'Telephone', 'RGPD', 'Statut', 'Lot', 'Date Inscription'], ';' );
 
-            foreach ($users as $user) {
+            foreach ($players as $player) {
+                $status = 'Pas encore joue';
+                if ($player->has_played) {
+                    $status = ($player->price && $player->price !== 'Perdu') ? 'Gagne' : 'Perdu';
+                }
+
                 fputcsv($file, [
-                    $user->id,
-                    $user->nom,
-                    $user->prenom,
-                    $user->age,
-                    $user->profession,
-                    $user->phone,
-                    $user->created_at->format('d/m/Y H:i')
-                ], ';');
+                    $player->id,
+                    $player->nom,
+                    $player->prenom,
+                    $player->telephone,
+                    $player->is_accept ? 'Oui' : 'Non',
+                    $status,
+                    $player->price ?? '',
+                    $player->created_at->format('d/m/Y H:i')
+                ], ';' );
             }
             fclose($file);
         };
@@ -85,7 +90,7 @@ class AdminController extends Controller
 
         Gift::create($input);
 
-        return back()->with('success', 'Cadeau ajouté avec succès.');
+        return back()->with('success', 'Cadeau ajoutÃ© avec succÃ¨s.');
     }
 
     public function deleteGift($id)
@@ -95,6 +100,6 @@ class AdminController extends Controller
             @unlink(public_path('images/' . $gift->image));
         }
         $gift->delete();
-        return back()->with('success', 'Cadeau supprimé.');
+        return back()->with('success', 'Cadeau supprimÃ©.');
     }
 }
