@@ -19,8 +19,10 @@
                     </a>
                 </div>
                 <span class="text-center text-white">+100 personnes ont déjà joué.</span>
-                <a href="{{ url('/registering') }}" class="btn btn-large"
-                    style="text-align: center; font-size: 2rem;"><b>Jouer</b></a>
+                {{-- <a href="{{ url('/registering') }}" class="btn btn-large"
+                    style="text-align: center; font-size: 2rem;"><b>Jouer</b></a> --}}
+                <button type="button" class="btn btn-large" data-bs-toggle="modal" data-bs-target="#gameEndedModal"
+                    style="text-align: center; font-size: 2rem;"><b>Jouer</b></button>
             </div>
         </div>
     </div>
@@ -39,8 +41,7 @@
                             <p class="lot-caption">Un dîner pour deux au restaurant LE LOF</p>
                         </div>
                         <div class="lot-item">
-                            <img src="{{ asset('img/lots-2.jpeg') }}"
-                                alt="Un contrat d’assurance MonAPPUI pour deux">
+                            <img src="{{ asset('img/lots-2.jpeg') }}" alt="Un contrat d’assurance MonAPPUI pour deux">
                             <p class="lot-caption">Un contrat d’assurance MonAPPUI pour deux</p>
                         </div>
                         <div class="lot-item">
@@ -53,6 +54,20 @@
                             <p class="lot-caption">Un somptueux bouquet de roses nature</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade valentine-modal" id="gameEndedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Jeu terminé</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-0">Le jeu est terminé. Merci pour votre participation.</p>
                 </div>
             </div>
         </div>
