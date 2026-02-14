@@ -26,7 +26,7 @@ class AdminController extends Controller
     // Export CSV des utilisateurs
     public function exportUsersCsv()
     {
-        $users = User::all();
+        $users = Player::all();
         $csvFileName = 'utilisateurs_' . date('Y-m-d_H-i') . '.csv';
         $headers = [
             "Content-type"        => "text/csv",
