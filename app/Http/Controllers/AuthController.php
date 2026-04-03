@@ -67,19 +67,10 @@ class AuthController extends Controller
             'age' => 'required|integer|min:18',
             'profession' => 'required|string|max:255',
             'phone' => ['required', 'string', 'regex:/^(?:\+225)?(?:01|05|07)[0-9]{8}$/'],
-            'firebase_verified' => 'accepted',
-            'firebase_phone' => ['required', 'string'],
         ]);
 
         $plainPassword = Str::random(12);
         $normalizedPhone = $this->normalizeIvorianPhone($validated['phone']);
-        $firebasePhone = $this->normalizeIvorianPhone($validated['firebase_phone']);
-
-        if ($firebasePhone !== $normalizedPhone) {
-            throw ValidationException::withMessages([
-                'phone' => 'Le numéro vérifié par Firebase ne correspond pas au numéro saisi.',
-            ]);
-        }
 
         if (User::where('phone', $normalizedPhone)->exists()) {
             throw ValidationException::withMessages([
