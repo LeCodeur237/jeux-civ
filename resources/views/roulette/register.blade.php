@@ -61,17 +61,6 @@
                         <div id="recaptcha-container"></div>
                     </div>
 
-                    <div class="control-group d-none" id="verification-group" style="margin-bottom: 5px !important;">
-                        <input type="text" class="login-field" placeholder="Code de vérification" id="verification-code" maxlength="6" inputmode="numeric">
-                        <label class="login-field-icon fui-lock" for="verification-code"></label>
-                    </div>
-
-                    <div class="d-grid gap-2 mb-3">
-                        <button type="button" class="btn btn-outline-primary btn-block d-none" id="verify-code-btn">
-                            Vérifier le code
-                        </button>
-                    </div>
-
                     <div class="alert alert-info text-start d-none" id="firebase-status" role="alert"></div>
 
                     <button type="submit" class="btn btn-large btn-block" id="register-btn" disabled>S'enregistrer</button>
@@ -85,6 +74,29 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="verificationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Vérification Firebase</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Entrez le code reçu par SMS pour vérifier votre numéro.</p>
+                    <div class="control-group mb-3">
+                        <input type="text" class="login-field" placeholder="Code de vérification" id="verification-code" maxlength="6" inputmode="numeric">
+                        <label class="login-field-icon fui-lock" for="verification-code"></label>
+                    </div>
+                    <div class="alert alert-info d-none" id="verification-status" role="alert"></div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="verify-code-btn">Vérifier le code</button>
+                </div>
             </div>
         </div>
     </div>
@@ -111,11 +123,13 @@
         const verifyCodeBtn = document.getElementById('verify-code-btn');
         const registerBtn = document.getElementById('register-btn');
         const statusBox = document.getElementById('firebase-status');
-        const verificationGroup = document.getElementById('verification-group');
         const verificationCode = document.getElementById('verification-code');
+        const verificationStatus = document.getElementById('verification-status');
         const firebaseVerified = document.getElementById('firebase-verified');
         const firebasePhone = document.getElementById('firebase-phone');
         const regPhoneInput = document.getElementById('reg-phone');
+        const verificationModalEl = document.getElementById('verificationModal');
+        const verificationModal = new bootstrap.Modal(verificationModalEl);
 
         let confirmationResult = null;
         let recaptchaVerifier = null;
@@ -130,10 +144,29 @@
             statusBox.classList.remove('d-none');
         }
 
+        function showVerificationStatus(message, type = 'info') {
+            verificationStatus.className = `alert alert-${type}`;
+            verificationStatus.textContent = message;
+            verificationStatus.classList.remove('d-none');
+        }
+
         function hideStatus() {
             statusBox.classList.add('d-none');
             statusBox.textContent = '';
         }
+
+        function hideVerificationStatus() {
+            verificationStatus.classList.add('d-none');
+            verificationStatus.textContent = '';
+        }
+
+        verificationModalEl.addEventListener('hidden.bs.modal', function() {
+            verificationCode.value = '';
+            hideVerificationStatus();
+            if (firebaseVerified.value !== '1') {
+                confirmationResult = null;
+            }
+        });
 
         function resetRecaptcha() {
             try {
@@ -206,9 +239,10 @@
                 confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
                 recaptchaReady = true;
                 firebasePhone.value = phone;
-                verificationGroup.classList.remove('d-none');
-                verifyCodeBtn.classList.remove('d-none');
-                verificationCode.focus();
+                verificationCode.value = '';
+                hideVerificationStatus();
+                verificationModal.show();
+                setTimeout(() => verificationCode.focus(), 150);
                 showStatus('Code envoyé par SMS. Entrez le code reçu pour continuer.', 'success');
             } catch (error) {
                 console.error(error);
@@ -248,13 +282,15 @@
                 firebaseVerified.value = '1';
                 registerBtn.disabled = false;
                 showStatus('Numéro vérifié avec succès. Vous pouvez maintenant vous inscrire.', 'success');
+                hideVerificationStatus();
+                verificationModal.hide();
             } catch (error) {
                 console.error(error);
                 firebaseVerified.value = '0';
                 registerBtn.disabled = true;
                 confirmationResult = null;
                 resetRecaptcha();
-                showStatus(error.message || 'Code invalide.', 'danger');
+                showVerificationStatus(error.message || 'Code invalide.', 'danger');
                 verificationCode.value = '';
             } finally {
                 verifyCodeBtn.disabled = false;
@@ -284,8 +320,7 @@
             confirmationResult = null;
             resetRecaptcha();
             verificationCode.value = '';
-            verificationGroup.classList.add('d-none');
-            verifyCodeBtn.classList.add('d-none');
+            hideVerificationStatus();
             hideStatus();
         });
     </script>
