@@ -1,6 +1,10 @@
 @extends('index')
 
 @section('contain')
+    @php
+        $firebaseTestMode = (bool) config('services.firebase.phone_auth_test_mode');
+        $firebaseTestCode = config('services.firebase.phone_auth_test_code') ?: '123456';
+    @endphp
     <a href="{{ url('/') }}" class="btn-back-floating">
         <i class="bi bi-arrow-left"></i>
     </a>
@@ -12,6 +16,9 @@
             <div class="login-screen">
                 <div class="app-title mb-4">
                     <h1>Inscription</h1>
+                    @if($firebaseTestMode)
+                        <small class="d-block mt-2 text-muted">Mode test gratuit activé</small>
+                    @endif
                 </div>
 
                 <form action="{{ url('/register-control') }}" method="POST" class="login-form" id="register-form">
@@ -102,21 +109,41 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-        import {
-            getAuth,
-            RecaptchaVerifier,
-            signInWithPhoneNumber
-        } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+        const firebaseTestMode = @json($firebaseTestMode);
+        const firebaseTestCode = @json($firebaseTestCode);
 
-        const firebaseConfig = {
-            apiKey: @json(config('services.firebase.api_key')),
-            authDomain: @json(config('services.firebase.auth_domain')),
-            projectId: @json(config('services.firebase.project_id')),
-            storageBucket: @json(config('services.firebase.storage_bucket')),
-            messagingSenderId: @json(config('services.firebase.messaging_sender_id')),
-            appId: @json(config('services.firebase.app_id')),
-        };
+        let initializeApp = null;
+        let getAuth = null;
+        let RecaptchaVerifier = null;
+        let signInWithPhoneNumber = null;
+        let firebaseReady = false;
+        let app = null;
+        let auth = null;
+
+        if (!firebaseTestMode) {
+            const firebaseAppModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+            const firebaseAuthModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+
+            initializeApp = firebaseAppModule.initializeApp;
+            getAuth = firebaseAuthModule.getAuth;
+            RecaptchaVerifier = firebaseAuthModule.RecaptchaVerifier;
+            signInWithPhoneNumber = firebaseAuthModule.signInWithPhoneNumber;
+
+            const firebaseConfig = {
+                apiKey: @json(config('services.firebase.api_key')),
+                authDomain: @json(config('services.firebase.auth_domain')),
+                projectId: @json(config('services.firebase.project_id')),
+                storageBucket: @json(config('services.firebase.storage_bucket')),
+                messagingSenderId: @json(config('services.firebase.messaging_sender_id')),
+                appId: @json(config('services.firebase.app_id')),
+            };
+
+            firebaseReady = Object.values(firebaseConfig).every(Boolean);
+            app = firebaseReady ? initializeApp(firebaseConfig) : null;
+            auth = firebaseReady ? getAuth(app) : null;
+        } else {
+            firebaseReady = true;
+        }
 
         const form = document.getElementById('register-form');
         const sendCodeBtn = document.getElementById('send-code-btn');
@@ -134,9 +161,6 @@
         let confirmationResult = null;
         let recaptchaVerifier = null;
         let recaptchaReady = false;
-        const firebaseReady = Object.values(firebaseConfig).every(Boolean);
-        const app = firebaseReady ? initializeApp(firebaseConfig) : null;
-        const auth = firebaseReady ? getAuth(app) : null;
 
         function showStatus(message, type = 'info') {
             statusBox.className = `alert alert-${type} text-start`;
@@ -181,7 +205,7 @@
             recaptchaReady = false;
         }
 
-        if (!firebaseReady) {
+        if (!firebaseTestMode && !firebaseReady) {
             sendCodeBtn.disabled = true;
             verifyCodeBtn.disabled = true;
             registerBtn.disabled = true;
@@ -215,7 +239,7 @@
         }
 
         async function sendCode() {
-            if (!firebaseReady) {
+            if (!firebaseTestMode && !firebaseReady) {
                 return;
             }
 
@@ -231,19 +255,35 @@
             sendCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
 
             try {
-                if (!recaptchaReady) {
-                    resetRecaptcha();
-                }
+                if (firebaseTestMode) {
+                    confirmationResult = { phone, code: firebaseTestCode };
+                    recaptchaReady = true;
+                    firebasePhone.value = phone;
+                    verificationCode.value = '';
+                    hideVerificationStatus();
+                    showVerificationStatus(`Mode test: utilisez le code ${firebaseTestCode}`, 'info');
+                    verificationModal.show();
+                    setTimeout(() => verificationCode.focus(), 150);
+                } else {
+                    if (!recaptchaReady) {
+                        resetRecaptcha();
+                    }
 
-                const verifier = ensureRecaptcha();
-                confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
-                recaptchaReady = true;
-                firebasePhone.value = phone;
-                verificationCode.value = '';
-                hideVerificationStatus();
-                verificationModal.show();
-                setTimeout(() => verificationCode.focus(), 150);
-                showStatus('Code envoyé par SMS. Entrez le code reçu pour continuer.', 'success');
+                    const verifier = ensureRecaptcha();
+                    confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
+                    recaptchaReady = true;
+                    firebasePhone.value = phone;
+                    verificationCode.value = '';
+                    hideVerificationStatus();
+                    verificationModal.show();
+                    setTimeout(() => verificationCode.focus(), 150);
+                    showStatus('Code envoyé par SMS. Entrez le code reçu pour continuer.', 'success');
+                }
+                if (firebaseTestMode) {
+                    showStatus('Mode test: entrez le code affiché dans la fenêtre.', 'success');
+                } else {
+                    showStatus('Code envoyé par SMS. Entrez le code reçu pour continuer.', 'success');
+                }
             } catch (error) {
                 console.error(error);
                 resetRecaptcha();
@@ -258,7 +298,7 @@
         }
 
         async function verifyCode() {
-            if (!firebaseReady) {
+            if (!firebaseTestMode && !firebaseReady) {
                 return;
             }
 
@@ -278,7 +318,13 @@
             verifyCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Vérification...';
 
             try {
-                await confirmationResult.confirm(code);
+                if (firebaseTestMode) {
+                    if (code !== String(confirmationResult.code)) {
+                        throw new Error('Code invalide.');
+                    }
+                } else {
+                    await confirmationResult.confirm(code);
+                }
                 firebaseVerified.value = '1';
                 registerBtn.disabled = false;
                 showStatus('Numéro vérifié avec succès. Vous pouvez maintenant vous inscrire.', 'success');
