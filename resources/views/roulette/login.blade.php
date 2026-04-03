@@ -15,7 +15,10 @@
                     @csrf
                     <div class="control-group" style="display: flex; position: relative; margin-bottom: 1.4rem !important;">
                         <input type="text" value="+225" class="login-field" readonly style="width: 70px; border-radius: 10px 0 0 10px; pointer-events: none;">
-                        <input type="tel" name="phone" class="login-field" placeholder="Numéro de téléphone" id="login-phone" required style="border-radius: 0 10px 10px 0; flex: 1;">
+                        <input type="tel" name="phone" class="login-field" placeholder="Numéro de téléphone" id="login-phone" required
+                            pattern="^(?:01|05|07)[0-9]{8}$" inputmode="numeric" maxlength="10"
+                            title="Numéro ivoirien à 10 chiffres, commence par 01, 05 ou 07"
+                            style="border-radius: 0 10px 10px 0; flex: 1;">
                         <label class="login-field-icon fui-chat" for="login-phone"></label>
                     </div>
 

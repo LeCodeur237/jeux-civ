@@ -1,13 +1,6 @@
 @extends('index')
 
 @section('contain')
-    <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display: none;">
-        @csrf
-    </form>
-    <a href="#" class="btn-back-floating"
-        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-        <i class="bi bi-box-arrow-left"></i>
-    </a>
     <div class="container">
         <div class="welcome-logo mb-5">
             <img src="{{ asset('images/logo epa.jpg.jpeg') }}" alt="Logo EPA">
@@ -64,88 +57,63 @@
             }
 
             let confettiIntervalId = null;
+
             function startConfettiEvery10s() {
                 if (confettiIntervalId !== null) return;
-                fireConfetti(); // premier tir immediat
+                fireConfetti();
                 confettiIntervalId = setInterval(fireConfetti, 5000);
             }
 
             const wheel = document.getElementById('wheel');
             const spinBtn = document.getElementById('spin-btn');
+            const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const assetBase = "{{ asset('images') }}";
 
             @if (Auth::user()->played_games)
                 spinBtn.disabled = true;
                 spinBtn.innerText = "Vous avez déjà joué";
             @endif
 
-            // Elements du modal
-            const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
-            const modalTitle = document.getElementById('modal-title');
-            const modalMessage = document.getElementById('modal-message');
-
-            // Récupération des cadeaux depuis la base de données via Blade
             let segments = @json($gifts);
 
-            // Si aucun cadeau en base, on met des valeurs par défaut pour tester
             if (segments.length === 0) {
-                segments = [{
-                        name: "T-shirt",
-                        image: null
-                    },
-                    {
-                        name: "Casquette",
-                        image: null
-                    },
-                    {
-                        name: "Panier",
-                        image: null
-                    },
-                    {
-                        name: "Bloc note",
-                        image: null
-                    },
-                    {
-                        name: "Bol",
-                        image: null
-                    },
-                    {
-                        name: "Perdu",
-                        image: null
-                    }
+                segments = [
+                    { name: "T-shirt", image: null },
+                    { name: "Casquette", image: null },
+                    { name: "Panier", image: null },
+                    { name: "Bloc note", image: null },
+                    { name: "Bol", image: null },
+                    { name: "Perdu", image: null }
                 ];
             } else {
-                // Ajout de la section "Perdu" à la liste des cadeaux
-                segments.push({
-                    name: "Perdu",
-                    image: null
-                });
+                segments.push({ name: "Perdu", image: null });
             }
 
-            // Configuration du Canvas
             const ctx = wheel.getContext('2d');
             const centerX = wheel.width / 2;
             const centerY = wheel.height / 2;
             const radius = wheel.width / 2;
             const palette = ['#FFC107', '#4CAF50', '#2196F3', '#9C27B0', '#FF5722', '#795548', '#607D8B'];
-
             let currentRotation = 0;
 
-            // Fonction pour dessiner la roue
+            function resolveImageUrl(path) {
+                if (!path) return null;
+                if (/^(https?:)?\/\//.test(path) || path.startsWith('/')) return path;
+                return `${assetBase}/${path}`;
+            }
+
             function drawWheel() {
-                // Nettoyer le canvas avant de redessiner pour éviter les superpositions
                 ctx.clearRect(0, 0, wheel.width, wheel.height);
 
                 const arc = (2 * Math.PI) / segments.length;
 
                 segments.forEach((segment, i) => {
-                    const angle = i * arc - Math.PI / 2; // -PI/2 pour commencer à midi (haut)
+                    const angle = i * arc - Math.PI / 2;
 
                     ctx.beginPath();
-                    if (segment.name === 'Perdu') {
-                        ctx.fillStyle = '#680202'; // Rouge uniquement pour Perdu
-                    } else {
-                        ctx.fillStyle = palette[i % palette.length]; // Couleurs variées pour les autres
-                    }
+                    ctx.fillStyle = segment.name === 'Perdu' ? '#680202' : palette[i % palette.length];
                     ctx.moveTo(centerX, centerY);
                     ctx.arc(centerX, centerY, radius, angle, angle + arc);
                     ctx.lineTo(centerX, centerY);
@@ -154,18 +122,14 @@
                     ctx.strokeStyle = '#fff';
                     ctx.stroke();
 
-                    // Dessin du texte et de l'image
                     ctx.save();
                     ctx.translate(centerX, centerY);
                     ctx.rotate(angle + arc / 2);
                     ctx.textAlign = "right";
 
-                    // Si une image est chargée, on l'affiche
                     if (segment.imgObj) {
-                        // On dessine l'image uniquement (sans texte)
                         ctx.drawImage(segment.imgObj, radius - 80, -30, 60, 60);
                     } else if (segment.name === 'Perdu') {
-                        // Afficher "Perdu" en blanc
                         ctx.fillStyle = "#ffffff";
                         ctx.font = "bold 20px Arial";
                         ctx.fillText(segment.name, radius - 30, 5);
@@ -175,91 +139,100 @@
                 });
             }
 
-            // Fonction pour charger les images et lancer le dessin de manière fiable
             function loadAssetsAndDraw() {
                 const imagePromises = segments.map(seg => {
-                    if (!seg.image) return Promise.resolve(); // Pas d'image, on résout immédiatement
+                    const imageUrl = resolveImageUrl(seg.image);
+                    if (!imageUrl) return Promise.resolve();
+
                     return new Promise(resolve => {
                         const img = new Image();
-                        img.src = seg.image;
+                        img.src = imageUrl;
                         img.onload = () => {
                             seg.imgObj = img;
                             resolve();
                         };
                         img.onerror = () => {
-                            console.error(`Impossible de charger l'image : ${seg.image}`);
+                            console.error(`Impossible de charger l'image : ${imageUrl}`);
                             resolve();
                         };
                     });
                 });
 
-                // Une fois que toutes les images sont chargées (ou en erreur), on dessine la roue
                 Promise.all(imagePromises).then(() => {
                     drawWheel();
                 });
             }
 
+            function rotationForIndex(index) {
+                const segmentAngle = 360 / segments.length;
+                const segmentCenter = (index * segmentAngle) + (segmentAngle / 2);
+                return (360 - segmentCenter) % 360;
+            }
+
+            function showResult(prizeName, prizeImage) {
+                if (prizeName === "Perdu" || prizeName === "Rejouez") {
+                    modalTitle.innerText = "Dommage !";
+                    modalMessage.innerHTML = `<img src="{{ asset('images/echec.gif') }}" alt="Echec" class="img-fluid mb-3" style="max-height: 150px;"><p>Vous avez perdu. Retentez votre chance !</p>`;
+                    resultModal.show();
+                    spinBtn.innerText = "Terminé";
+                    return;
+                }
+
+                modalTitle.innerText = "Félicitations !";
+
+                let messageContent = `<img src="{{ asset('images/succes.gif') }}" alt="Succès" class="img-fluid mb-3" style="max-height: 150px;">`;
+                messageContent += `<p class="mb-3">Vous avez gagné : <b>${prizeName}</b></p>`;
+                if (prizeImage) {
+                    messageContent += `<img src="${prizeImage}" alt="${prizeName}" class="img-fluid rounded" style="max-height: 120px; border : 2px solid #7d1900; padding: 5px;">`;
+                }
+                modalMessage.innerHTML = messageContent;
+
+                startConfettiEvery10s();
+                resultModal.show();
+                spinBtn.innerText = "Terminé";
+            }
+
             loadAssetsAndDraw();
 
-            spinBtn.addEventListener('click', function() {
+            spinBtn.addEventListener('click', async function() {
                 spinBtn.disabled = true;
 
-                // Calcul d'une rotation aléatoire : au moins 5 tours (1800 deg) + aléatoire
-                const randomSpins = Math.floor(Math.random() * 5) + 5;
-                const randomAngle = Math.floor(Math.random() * 360);
-                const totalRotation = (randomSpins * 360) + randomAngle;
-
-                // On ajoute à la rotation actuelle pour une animation fluide
-                currentRotation += totalRotation;
-
-                wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
-                wheel.style.transform = `rotate(${currentRotation}deg)`;
-
-                setTimeout(() => {
-                    // Calcul du segment gagnant
-                    const actualDeg = currentRotation % 360;
-                    const segmentAngle = 360 / segments.length;
-                    // Ajustement car on a dessiné en commençant à -90deg (haut)
-                    const winningAngle = (360 - actualDeg) % 360;
-                    const index = Math.floor(winningAngle / segmentAngle);
-
-                    const winningSegment = segments[index];
-                    const prizeName = winningSegment.name;
-
-                    // Enregistrement du résultat en base de données
-                    fetch('{{ url('/save-game-result') }}', {
+                try {
+                    const response = await fetch('{{ url('/save-game-result') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            prize: prizeName
-                        })
+                        }
                     });
 
-                    if (prizeName === "Perdu" || prizeName === "Rejouez") {
-                        modalTitle.innerText = "Dommage !";
-                        modalMessage.innerHTML = `<img src="{{ asset('images/echec.gif') }}" alt="Echec" class="img-fluid mb-3" style="max-height: 150px;"><p>Vous avez perdu. Retentez votre chance !</p>`;
-                    } else {
-                        modalTitle.innerText = "Félicitations !";
+                    const data = await response.json();
 
-                        let messageContent = `<img src="{{ asset('images/succes.gif') }}" alt="Succès" class="img-fluid mb-3" style="max-height: 150px;">`;
-                        messageContent += `<p class="mb-3">Vous avez gagné : <b>${prizeName}</b></p>`;
-                        if (winningSegment.image) {
-                            messageContent +=
-                                `<img src="${winningSegment.image}" alt="${prizeName}" class="img-fluid rounded" style="max-height: 120px; border : 2px solid #7d1900; padding: 5px;">`;
-                        }
-                        modalMessage.innerHTML = messageContent;
-
-                        // Lancement des confettis
-                        startConfettiEvery10s();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Impossible de traiter le tirage.');
                     }
 
-                    resultModal.show();
+                    const prizeName = data.prize || 'Perdu';
+                    const prizeIndex = segments.findIndex(segment => segment.name === prizeName);
+                    const landingIndex = prizeIndex >= 0 ? prizeIndex : segments.findIndex(segment => segment.name === 'Perdu');
+                    const randomSpins = Math.floor(Math.random() * 5) + 5;
+                    const targetRotation = rotationForIndex(landingIndex >= 0 ? landingIndex : 0);
 
-                    spinBtn.innerText = "Terminé";
-                }, 5000); // Correspond à la durée de la transition CSS
+                    currentRotation += (randomSpins * 360) + targetRotation;
+                    wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+                    setTimeout(() => {
+                        window.location.href = data.redirect || "{{ route('roulette.result') }}";
+                    }, 5000);
+                } catch (error) {
+                    console.error(error);
+                    spinBtn.disabled = false;
+                    spinBtn.innerText = "Tenter ma chance";
+                    modalTitle.innerText = "Erreur";
+                    modalMessage.innerText = error.message || "Une erreur est survenue. Veuillez réessayer.";
+                    resultModal.show();
+                }
             });
         });
     </script>

@@ -16,49 +16,69 @@
 
                 <form action="{{ url('/register-control') }}" method="POST" class="login-form" id="register-form">
                     @csrf
+                    <input type="hidden" name="firebase_verified" id="firebase-verified" value="0">
+                    <input type="hidden" name="firebase_phone" id="firebase-phone" value="">
+
                     <div class="control-group" style="margin-bottom: 5px !important;">
                         <input type="text" name="nom" class="login-field" placeholder="Nom" id="reg-nom" required>
                         <label class="login-field-icon fui-user" for="reg-nom"></label>
                     </div>
 
                     <div class="control-group" style="margin-bottom: 5px;">
-                        <input type="text" name="prenom" class="login-field" placeholder="Prénom" id="reg-prenom"
-                            required>
+                        <input type="text" name="prenom" class="login-field" placeholder="Prénom" id="reg-prenom" required>
                         <label class="login-field-icon fui-user" for="reg-prenom"></label>
                     </div>
 
                     <div style="display: flex; gap: 5px; margin-bottom: 5px;">
                         <div class="control-group" style="flex: 1; margin-bottom: 0 !important;">
-                            <input type="number" name="age" class="login-field" placeholder="Âge" id="reg-age"
-                                required>
+                            <input type="number" name="age" class="login-field" placeholder="Âge" id="reg-age" required>
                             <label class="login-field-icon fui-user" for="reg-age"></label>
                         </div>
 
                         <div class="control-group" style="flex: 1; margin-bottom: 0 !important;">
-                            <input type="text" name="profession" class="login-field" placeholder="Profession"
-                                id="reg-profession" required>
+                            <input type="text" name="profession" class="login-field" placeholder="Profession" id="reg-profession" required>
                             <label class="login-field-icon fui-user" for="reg-profession"></label>
                         </div>
                     </div>
 
-                    <div class="control-group" style="display: flex; position: relative; margin-bottom: 1.4rem !important;">
+                    <div class="control-group" style="display: flex; position: relative; margin-bottom: 1rem !important;">
                         <input type="text" value="+225" class="login-field" readonly
                             style="width: 70px; border-radius: 10px 0 0 10px; pointer-events: none;">
                         <input type="tel" name="phone" class="login-field" placeholder="Téléphone" id="reg-phone"
-                            required style="border-radius: 0 10px 10px 0; flex: 1;">
+                            required pattern="^(?:01|05|07)[0-9]{8}$" inputmode="numeric" maxlength="10"
+                            title="Numéro ivoirien à 10 chiffres, commence par 01, 05 ou 07"
+                            style="border-radius: 0 10px 10px 0; flex: 1;">
                         <label class="login-field-icon fui-chat" for="reg-phone"></label>
                     </div>
 
-                    <button type="submit" class="btn btn-large btn-block" id="register-btn">S'enregistrer</button>
+                    <div class="text-start mb-3">
+                        <div id="recaptcha-container"></div>
+                        <button type="button" class="btn btn-secondary btn-block" id="send-code-btn">
+                            Envoyer le code par SMS
+                        </button>
+                    </div>
+
+                    <div class="control-group d-none" id="verification-group" style="margin-bottom: 5px !important;">
+                        <input type="text" class="login-field" placeholder="Code de vérification" id="verification-code" maxlength="6" inputmode="numeric">
+                        <label class="login-field-icon fui-lock" for="verification-code"></label>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="button" class="btn btn-outline-primary btn-block d-none" id="verify-code-btn">
+                            Vérifier le code
+                        </button>
+                    </div>
+
+                    <div class="alert alert-info text-start d-none" id="firebase-status" role="alert"></div>
+
+                    <button type="submit" class="btn btn-large btn-block" id="register-btn" disabled>S'enregistrer</button>
+
                     <div class="partners-logo mt-4">
                         <h6>Nos partenaires : </h6>
                         <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
-                            <img src="{{ asset('images/partner-1.jpeg') }}" alt="GIMUEMOA"
-                                style="height: 40px; object-fit: contain;">
-                            <img src="{{ asset('images/partner-2.jpeg') }}" alt="SUNU Assurances"
-                                style="height: 40px; object-fit: contain;">
-                            <img src="{{ asset('images/partner-3.jpeg') }}" alt="GES-CI"
-                                style="height: 40px; object-fit: contain;">
+                            <img src="{{ asset('images/partner-1.jpeg') }}" alt="GIMUEMOA" style="height: 40px; object-fit: contain;">
+                            <img src="{{ asset('images/partner-2.jpeg') }}" alt="SUNU Assurances" style="height: 40px; object-fit: contain;">
+                            <img src="{{ asset('images/partner-3.jpeg') }}" alt="GES-CI" style="height: 40px; object-fit: contain;">
                         </div>
                     </div>
                 </form>
@@ -66,12 +86,172 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('register-form').addEventListener('submit', function() {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+        import {
+            getAuth,
+            RecaptchaVerifier,
+            signInWithPhoneNumber
+        } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: @json(config('services.firebase.api_key')),
+            authDomain: @json(config('services.firebase.auth_domain')),
+            projectId: @json(config('services.firebase.project_id')),
+            storageBucket: @json(config('services.firebase.storage_bucket')),
+            messagingSenderId: @json(config('services.firebase.messaging_sender_id')),
+            appId: @json(config('services.firebase.app_id')),
+        };
+
+        const form = document.getElementById('register-form');
+        const sendCodeBtn = document.getElementById('send-code-btn');
+        const verifyCodeBtn = document.getElementById('verify-code-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const statusBox = document.getElementById('firebase-status');
+        const verificationGroup = document.getElementById('verification-group');
+        const verificationCode = document.getElementById('verification-code');
+        const firebaseVerified = document.getElementById('firebase-verified');
+        const firebasePhone = document.getElementById('firebase-phone');
+        const regPhoneInput = document.getElementById('reg-phone');
+
+        let confirmationResult = null;
+        let recaptchaVerifier = null;
+        const firebaseReady = Object.values(firebaseConfig).every(Boolean);
+        const app = firebaseReady ? initializeApp(firebaseConfig) : null;
+        const auth = firebaseReady ? getAuth(app) : null;
+
+        function showStatus(message, type = 'info') {
+            statusBox.className = `alert alert-${type} text-start`;
+            statusBox.textContent = message;
+            statusBox.classList.remove('d-none');
+        }
+
+        function hideStatus() {
+            statusBox.classList.add('d-none');
+            statusBox.textContent = '';
+        }
+
+        if (!firebaseReady) {
+            sendCodeBtn.disabled = true;
+            verifyCodeBtn.disabled = true;
+            registerBtn.disabled = true;
+            showStatus('Firebase n’est pas configuré. Renseignez les variables FIREBASE_* dans le fichier .env.', 'warning');
+        }
+
+        function normalizePhone(value) {
+            const digits = (value || '').replace(/\D/g, '');
+            if (digits.length === 10 && /^(01|05|07)/.test(digits)) {
+                return `+225${digits}`;
+            }
+            if (digits.length === 13 && digits.startsWith('225')) {
+                const local = digits.slice(3);
+                if (/^(01|05|07)[0-9]{8}$/.test(local)) {
+                    return `+225${local}`;
+                }
+            }
+            return null;
+        }
+
+        function ensureRecaptcha() {
+            if (recaptchaVerifier) {
+                return recaptchaVerifier;
+            }
+
+            recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                size: 'invisible'
+            });
+
+            return recaptchaVerifier;
+        }
+
+        async function sendCode() {
+            if (!firebaseReady) {
+                return;
+            }
+
+            const phone = normalizePhone(regPhoneInput.value);
+
+            if (!phone) {
+                showStatus('Le numéro doit être ivoirien et commencer par 01, 05 ou 07.', 'warning');
+                return;
+            }
+
+            hideStatus();
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
+
+            try {
+                const verifier = ensureRecaptcha();
+                confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
+                firebasePhone.value = phone;
+                verificationGroup.classList.remove('d-none');
+                verifyCodeBtn.classList.remove('d-none');
+                verificationCode.focus();
+                showStatus('Code envoyé par SMS. Entrez le code reçu pour continuer.', 'success');
+            } catch (error) {
+                console.error(error);
+                showStatus(error.message || 'Impossible d’envoyer le code SMS.', 'danger');
+            } finally {
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = 'Envoyer le code par SMS';
+            }
+        }
+
+        async function verifyCode() {
+            if (!firebaseReady) {
+                return;
+            }
+
+            const code = verificationCode.value.trim();
+
+            if (!confirmationResult) {
+                showStatus('Veuillez d’abord envoyer le code SMS.', 'warning');
+                return;
+            }
+
+            if (code.length < 6) {
+                showStatus('Le code doit contenir 6 chiffres.', 'warning');
+                return;
+            }
+
+            verifyCodeBtn.disabled = true;
+            verifyCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Vérification...';
+
+            try {
+                await confirmationResult.confirm(code);
+                firebaseVerified.value = '1';
+                registerBtn.disabled = false;
+                showStatus('Numéro vérifié avec succès. Vous pouvez maintenant vous inscrire.', 'success');
+            } catch (error) {
+                console.error(error);
+                firebaseVerified.value = '0';
+                registerBtn.disabled = true;
+                showStatus(error.message || 'Code invalide.', 'danger');
+            } finally {
+                verifyCodeBtn.disabled = false;
+                verifyCodeBtn.textContent = 'Vérifier le code';
+            }
+        }
+
+        sendCodeBtn.addEventListener('click', sendCode);
+        verifyCodeBtn.addEventListener('click', verifyCode);
+
+        form.addEventListener('submit', function(event) {
+            if (firebaseVerified.value !== '1') {
+                event.preventDefault();
+                showStatus('Veuillez d’abord vérifier votre numéro par SMS.', 'warning');
+                return;
+            }
+
             const btn = document.getElementById('register-btn');
             btn.disabled = true;
-            btn.innerHTML =
-                '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Traitement...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Traitement...';
+        });
+
+        regPhoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            firebaseVerified.value = '0';
+            registerBtn.disabled = true;
         });
     </script>
 @endsection

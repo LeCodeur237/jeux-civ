@@ -2,53 +2,106 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Player;
+use App\Models\Gift;
 use App\Models\GameTurn;
+use App\Models\Player;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private function normalizeIvorianPhone(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone);
+
+        if (str_starts_with($digits, '225') && strlen($digits) === 13) {
+            $digits = substr($digits, 3);
+        }
+
+        if (!preg_match('/^(01|05|07)[0-9]{8}$/', $digits)) {
+            throw ValidationException::withMessages([
+                'phone' => 'Le numéro doit être un numéro ivoirien valide à 10 chiffres.',
+            ]);
+        }
+
+        return '+225' . $digits;
+    }
+
+    private function rouletteSegments()
+    {
+        $segments = Gift::query()
+            ->get(['name', 'image'])
+            ->map(function ($gift) {
+                return [
+                    'name' => $gift->name,
+                    'image' => $gift->image ? asset('images/' . $gift->image) : null,
+                ];
+            })
+            ->values();
+
+        if ($segments->isEmpty()) {
+            $segments = collect([
+                ['name' => 'T-shirt', 'image' => null],
+                ['name' => 'Casquette', 'image' => null],
+                ['name' => 'Panier', 'image' => null],
+                ['name' => 'Bloc note', 'image' => null],
+                ['name' => 'Bol', 'image' => null],
+            ]);
+        }
+
+        return $segments->push(['name' => 'Perdu', 'image' => null]);
+    }
+
     /**
      * Traitement de l'inscription (Register)
      */
     public function registerControl(Request $request)
     {
-        // 1. Validation des données reçues du formulaire
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
-            'age' => 'required|integer|min:18', // Exemple: âge minimum 18 ans
+            'age' => 'required|integer|min:18',
             'profession' => 'required|string|max:255',
-            'phone' => 'required|string|min:10|max:10|unique:users,phone', // Vérifie que le numéro est unique
+            'phone' => ['required', 'string', 'regex:/^(?:\+225)?(?:01|05|07)[0-9]{8}$/'],
+            'firebase_verified' => 'accepted',
+            'firebase_phone' => ['required', 'string'],
         ]);
 
-        // 2. Création du nouvel utilisateur
-        $user = new User();
-        $user->nom = $request->nom;
-        $user->prenom = $request->prenom;
-        $user->age = $request->age;
-        $user->profession = $request->profession;
+        $plainPassword = Str::random(12);
+        $normalizedPhone = $this->normalizeIvorianPhone($validated['phone']);
+        $firebasePhone = $this->normalizeIvorianPhone($validated['firebase_phone']);
 
-        // On ajoute l'indicatif +225 au numéro pour le stockage
-        $user->phone = '+225' . $request->phone;
+        if ($firebasePhone !== $normalizedPhone) {
+            throw ValidationException::withMessages([
+                'phone' => 'Le numéro vérifié par Firebase ne correspond pas au numéro saisi.',
+            ]);
+        }
 
-        // Note : Comme votre formulaire n'a pas de mot de passe,
-        // on peut définir un mot de passe par défaut ou rendre le champ nullable en base.
-        // Ici, on met un mot de passe aléatoire par sécurité.
-        $password = uniqid();
-        $user->password = Hash::make($password);
+        if (User::where('phone', $normalizedPhone)->exists()) {
+            throw ValidationException::withMessages([
+                'phone' => 'Ce numéro est déjà utilisé.',
+            ]);
+        }
 
-        $user->save();
+        $user = User::create([
+            'nom' => $validated['nom'],
+            'prenom' => $validated['prenom'],
+            'age' => $validated['age'],
+            'profession' => $validated['profession'],
+            'phone' => $normalizedPhone,
+            'password' => $plainPassword,
+        ]);
 
-        // 3. Connexion automatique de l'utilisateur (optionnel)
         Auth::login($user);
 
-        // 4. Redirection vers l'accueil ou le jeu
-        return redirect('/success')->with('success', 'Inscription réussie ! Bienvenue.')->with('phone', $user->phone)->with('password', $password);
+        return redirect('/success')
+            ->with('success', 'Inscription réussie ! Bienvenue.')
+            ->with('phone', $user->phone)
+            ->with('password', $plainPassword);
     }
 
     /**
@@ -57,12 +110,11 @@ class AuthController extends Controller
     public function loginControl(Request $request)
     {
         $credentials = $request->validate([
-            'phone' => 'required',
+            'phone' => ['required', 'string', 'regex:/^(?:\+225)?(?:01|05|07)[0-9]{8}$/'],
             'password' => 'required',
         ]);
 
-        // On ajoute le préfixe +225 pour correspondre au format stocké en base de données
-        $credentials['phone'] = '+225' . $credentials['phone'];
+        $credentials['phone'] = $this->normalizeIvorianPhone($credentials['phone']);
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -79,9 +131,20 @@ class AuthController extends Controller
         ]);
     }
 
-    function successControl(Request $request)
+    public function successControl(Request $request)
     {
         return view('roulette.success');
+    }
+
+    public function rouletteResultControl(Request $request)
+    {
+        $user = Auth::user();
+
+        return view('roulette.result', [
+            'hasPlayed' => (bool) $user->played_games,
+            'prize' => $user->price,
+            'isWinner' => $user->played_games && $user->price && $user->price !== 'Perdu',
+        ]);
     }
 
     public function logout(Request $request)
@@ -89,6 +152,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
     }
 
@@ -96,14 +160,27 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        // On vérifie si l'utilisateur n'a pas déjà joué pour éviter la triche
-        if (!$user->played_games) {
-            $user->played_games = true;
-            $user->price = $request->prize;
-            $user->save();
+        if ($user->played_games) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous avez déjà joué.',
+                'prize' => $user->price,
+            ], 409);
         }
 
-        return response()->json(['success' => true]);
+        $winningSegment = $this->rouletteSegments()->random();
+
+        $user->forceFill([
+            'played_games' => true,
+            'price' => $winningSegment['name'],
+        ])->save();
+
+        return response()->json([
+            'success' => true,
+            'prize' => $winningSegment['name'],
+            'image' => $winningSegment['image'],
+            'redirect' => route('roulette.result'),
+        ]);
     }
 
     public function registerPlayer(Request $request)
@@ -131,38 +208,43 @@ class AuthController extends Controller
             'player_id' => 'required|exists:players,id',
         ]);
 
-        $player = Player::find($request->player_id);
+        return DB::transaction(function () use ($request) {
+            $player = Player::whereKey($request->player_id)->lockForUpdate()->firstOrFail();
 
-        if ($player->has_played) {
-            return response()->json(['success' => false, 'message' => 'Vous avez déjà joué.', 'prize' => $player->price]);
-        }
+            if ($player->has_played) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous avez déjà joué.',
+                    'prize' => $player->price,
+                ]);
+            }
 
-        // Détermination du lot côté serveur (compteur sur game_turns)
-        $winningTurns = [21, 50, 55, 60, 65, 75, 80];
-        $turnNumber = GameTurn::count() + 1;
+            $turnNumber = GameTurn::lockForUpdate()->count() + 1;
 
-        $winningMap = [
-            21 => "Un contrat d’assurance MonAPPUI pour deux",
-            50 => "Un contrat d’assurance MonAPPUI pour deux",
-            55 => "Un dîner pour deux au restaurant LE LOF",
-            60 => "Une prestation d’extension de cils de chez ELIAB",
-            65 => "Un somptueux bouquet de roses nature",
-            75 => "Un contrat d’assurance MonAPPUI pour deux",
-            80 => "Un dîner pour deux au restaurant LE LOF",
-        ];
+            $winningMap = [
+                21 => "Un contrat d’assurance MonAPPUI pour deux",
+                50 => "Un contrat d’assurance MonAPPUI pour deux",
+                55 => "Un dîner pour deux au restaurant LE LOF",
+                60 => "Une prestation d’extension de cils de chez ELIAB",
+                65 => "Un somptueux bouquet de roses nature",
+                75 => "Un contrat d’assurance MonAPPUI pour deux",
+                80 => "Un dîner pour deux au restaurant LE LOF",
+            ];
 
-        $prize = $winningMap[$turnNumber] ?? "Perdu";
+            $prize = $winningMap[$turnNumber] ?? 'Perdu';
 
-        $player->has_played = true;
-        $player->price = $prize;
-        $player->save();
+            $player->forceFill([
+                'has_played' => true,
+                'price' => $prize,
+            ])->save();
 
-        GameTurn::create([
-            'player_id' => $player->id,
-            'prize' => $prize,
-        ]);
+            GameTurn::create([
+                'player_id' => $player->id,
+                'prize' => $prize,
+            ]);
 
-        return response()->json(['success' => true, 'prize' => $prize]);
+            return response()->json(['success' => true, 'prize' => $prize]);
+        });
     }
 
     public function checkPlayerStatus(Request $request)

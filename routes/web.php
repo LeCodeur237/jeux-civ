@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuthController;
 use App\Models\Gift;
+use Illuminate\Support\Facades\Route;
 
 Route::post('/logout', [AuthController::class, 'logout']);
 
 // Routes accessibles uniquement aux invités (non connectés)
 Route::middleware(['guest'])->group(function () {
     Route::get('/', function () {
-        return view('grattage.welcomex');
+        return view('roulette.welcome');
     })->name('welcome');
 
     Route::get('/register', function () {
@@ -39,15 +39,20 @@ Route::middleware(['guest'])->group(function () {
 // Routes accessibles uniquement aux utilisateurs connectés
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', function () {
+        if (auth()->user()->played_games) {
+            return redirect()->route('roulette.result');
+        }
+
         $gifts = Gift::all();
         return view('roulette.home', compact('gifts'));
     })->name('home');
 
     Route::get('/success', [AuthController::class, 'successControl']);
+    Route::get('/roulette-result', [AuthController::class, 'rouletteResultControl'])->name('roulette.result');
     Route::post('/save-game-result', [AuthController::class, 'saveGameResult']);
 
     // Routes Administration
-    Route::prefix('admin')->group(function () {
+    Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
         Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
         Route::get('/users/export', [AdminController::class, 'exportUsersCsv'])->name('admin.users.export');

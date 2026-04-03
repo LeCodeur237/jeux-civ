@@ -73,13 +73,13 @@ class AdminController extends Controller
 
     public function storeGift(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'game_name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $input = $request->all();
+        $input = $validated;
 
         if ($image = $request->file('image')) {
             $destinationPath = public_path('images');

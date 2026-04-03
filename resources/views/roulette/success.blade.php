@@ -15,14 +15,14 @@
                     <div class="control-group mb-1">
                         <label class="text-dark d-block">Votre Numéro (Identifiant)</label>
                         <div class="login-field" style="background: rgba(255,255,255,0.1); line-height: 40px; font-weight: 700;">
-                            {{ session('phone') }} 0909090909
+                            {{ session('phone') }}
                         </div>
                     </div>
 
                     <div class="control-group mb-4">
                         <label class="text-dark d-block mb-1">Votre Mot de passe</label>
                         <div class="login-field position-relative" id="copy-btn" style="background: rgba(255,255,255,0.1); line-height: 40px; font-weight: 700; color: #000000; cursor: pointer;" title="Copier le mot de passe">
-                            <span id="password-text">{{ session('password') }} #28a745cc000</span>
+                            <span id="password-text">{{ session('password') }}</span>
                             <i class="bi bi-clipboard position-absolute" id="copy-icon" style="right: 70px; top: 50%; transform: translateY(-50%);"></i>
                         </div>
                     </div>
