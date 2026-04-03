@@ -4,7 +4,7 @@
     <a href="{{ url('/') }}" class="btn-back-floating">
         <i class="bi bi-arrow-left"></i>
     </a>
-    <div class="container">
+    <div class="container register-page">
         <div class="welcome-logo">
             <img src="{{ asset('images/logo epa.jpg.jpeg') }}" alt="Logo EPA">
         </div>
@@ -41,21 +41,24 @@
                         </div>
                     </div>
 
-                    <div class="control-group" style="display: flex; position: relative; margin-bottom: 1rem !important;">
-                        <input type="text" value="+225" class="login-field" readonly
-                            style="width: 70px; border-radius: 10px 0 0 10px; pointer-events: none;">
-                        <input type="tel" name="phone" class="login-field" placeholder="Téléphone" id="reg-phone"
-                            required pattern="^(?:01|05|07)[0-9]{8}$" inputmode="numeric" maxlength="10"
-                            title="Numéro ivoirien à 10 chiffres, commence par 01, 05 ou 07"
-                            style="border-radius: 0 10px 10px 0; flex: 1;">
-                        <label class="login-field-icon fui-chat" for="reg-phone"></label>
+                    <div class="control-group" style="display: flex; gap: 8px; align-items: stretch; margin-bottom: 1rem !important;">
+                        <div style="display: flex; flex: 1; position: relative;">
+                            <input type="text" value="+225" class="login-field" readonly
+                                style="width: 50px; border-radius: 10px 0 0 10px; pointer-events: none;">
+                            <input type="tel" name="phone" class="login-field" placeholder="Téléphone" id="reg-phone"
+                                required pattern="^(?:01|05|07)[0-9]{8}$" inputmode="numeric" maxlength="10"
+                                title="Numéro ivoirien à 10 chiffres, commence par 01, 05 ou 07"
+                                style="border-radius: 0 10px 10px 0; flex: 1;">
+                            <label class="login-field-icon fui-chat" for="reg-phone"></label>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="send-code-btn"
+                            style="width: auto; min-width: 100px; white-space: nowrap;">
+                            Envoyer
+                        </button>
                     </div>
 
                     <div class="text-start mb-3">
                         <div id="recaptcha-container"></div>
-                        <button type="button" class="btn btn-secondary btn-block" id="send-code-btn">
-                            Envoyer le code par SMS
-                        </button>
                     </div>
 
                     <div class="control-group d-none" id="verification-group" style="margin-bottom: 5px !important;">
@@ -116,6 +119,7 @@
 
         let confirmationResult = null;
         let recaptchaVerifier = null;
+        let recaptchaReady = false;
         const firebaseReady = Object.values(firebaseConfig).every(Boolean);
         const app = firebaseReady ? initializeApp(firebaseConfig) : null;
         const auth = firebaseReady ? getAuth(app) : null;
@@ -129,6 +133,19 @@
         function hideStatus() {
             statusBox.classList.add('d-none');
             statusBox.textContent = '';
+        }
+
+        function resetRecaptcha() {
+            try {
+                if (recaptchaVerifier && typeof recaptchaVerifier.clear === 'function') {
+                    recaptchaVerifier.clear();
+                }
+            } catch (error) {
+                console.warn('Unable to clear reCAPTCHA verifier:', error);
+            }
+
+            recaptchaVerifier = null;
+            recaptchaReady = false;
         }
 
         if (!firebaseReady) {
@@ -181,8 +198,13 @@
             sendCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Envoi...';
 
             try {
+                if (!recaptchaReady) {
+                    resetRecaptcha();
+                }
+
                 const verifier = ensureRecaptcha();
                 confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
+                recaptchaReady = true;
                 firebasePhone.value = phone;
                 verificationGroup.classList.remove('d-none');
                 verifyCodeBtn.classList.remove('d-none');
@@ -190,10 +212,14 @@
                 showStatus('Code envoyé par SMS. Entrez le code reçu pour continuer.', 'success');
             } catch (error) {
                 console.error(error);
+                resetRecaptcha();
+                confirmationResult = null;
+                firebaseVerified.value = '0';
+                registerBtn.disabled = true;
                 showStatus(error.message || 'Impossible d’envoyer le code SMS.', 'danger');
             } finally {
                 sendCodeBtn.disabled = false;
-                sendCodeBtn.textContent = 'Envoyer le code par SMS';
+                sendCodeBtn.textContent = 'Envoyer';
             }
         }
 
@@ -226,7 +252,10 @@
                 console.error(error);
                 firebaseVerified.value = '0';
                 registerBtn.disabled = true;
+                confirmationResult = null;
+                resetRecaptcha();
                 showStatus(error.message || 'Code invalide.', 'danger');
+                verificationCode.value = '';
             } finally {
                 verifyCodeBtn.disabled = false;
                 verifyCodeBtn.textContent = 'Vérifier le code';
@@ -252,6 +281,12 @@
             this.value = this.value.replace(/\D/g, '').slice(0, 10);
             firebaseVerified.value = '0';
             registerBtn.disabled = true;
+            confirmationResult = null;
+            resetRecaptcha();
+            verificationCode.value = '';
+            verificationGroup.classList.add('d-none');
+            verifyCodeBtn.classList.add('d-none');
+            hideStatus();
         });
     </script>
 @endsection
