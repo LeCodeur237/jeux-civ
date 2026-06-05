@@ -10,8 +10,18 @@ Route::post('/logout', [AuthController::class, 'logout']);
 // Routes accessibles uniquement aux invités (non connectés)
 Route::middleware(['guest'])->group(function () {
     Route::get('/', function () {
-        return view('roulette.welcome');
+        return view('games.index');
     })->name('welcome');
+
+    // Route to show roulette welcome (accessible from games page)
+    Route::get('/roulette', function () {
+        return view('roulette.welcome');
+    })->name('roulette.welcome');
+
+    // Page listing available jeux (kept for compatibility)
+    Route::get('/games', function () {
+        return view('games.index');
+    })->name('games');
 
     Route::get('/register', function () {
         return view('roulette.register');

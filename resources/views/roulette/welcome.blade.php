@@ -1,33 +1,52 @@
 @extends('index')
-
 @section('contain')
-    <div class="container">
-        <div class="welcome-logo">
-            <img src="{{ asset('images/logo epa.jpg.jpeg') }}" alt="Logo EPA">
-        </div>
-        <div class="welcome-screen">
-            <div class="roulette-container">
-                <img src="{{ asset('images/roulette.png') }}" alt="Roulette" class="roulette-wheel">
-                <i class="bi bi-gift-fill floating-icon icon-1"></i>
-                <i class="bi bi-stars floating-icon icon-2"></i>
-                <i class="bi bi-trophy-fill floating-icon icon-3"></i>
-                <i class="bi bi-bag-heart-fill floating-icon icon-4"></i>
-            </div>
-            <div class="welcome-content">
-                <h1>Bienvenue !</h1>
-                <p>Participez au Grand Jeu Elles Plus Africa ! Le principe est simple : c'est une roulette.
-                </p>
-            </div>
-            <a href="{{ url('/register') }}" class="btn">Commencer</a>
-            <div class="partners-logo mt-4">
-                <h6>Nos partenaires : </h6>
-                <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
-                    <img src="{{ asset('images/partner-1.jpeg') }}" alt="GIMUEMOA" style="height: 40px; object-fit: contain;">
-                    <img src="{{ asset('images/partner-2.jpeg') }}" alt="SUNU Assurances" style="height: 40px; object-fit: contain;">
-                    <img src="{{ asset('images/partner-3.jpeg') }}" alt="GES-CI" style="height: 40px; object-fit: contain;">
-                </div>
-            </div>
 
-        </div>
+<div class="welcome-page-wrapper">
+
+  <div class="welcome-intro">
+    <p class="welcome-eyebrow">Elles Plus Africa</p>
+    <h1>Bienvenue !</h1>
+    <p class="welcome-sub">Participez au <strong>Grand Jeu</strong> et tentez de remporter de superbes cadeaux.</p>
+  </div>
+
+  <div class="welcome-visual">
+    <div class="welcome-orbit"></div>
+    <div class="welcome-wheel-bg">
+      <img src="{{ asset('images/roulette.png') }}" alt="Roulette" class="welcome-wheel-img">
     </div>
+    <i class="bi bi-gift-fill welcome-float wf-1"></i>
+    <i class="bi bi-stars welcome-float wf-2"></i>
+    <i class="bi bi-trophy-fill welcome-float wf-3"></i>
+    <i class="bi bi-bag-heart-fill welcome-float wf-4"></i>
+  </div>
+
+  <div class="welcome-actions">
+    <a href="{{ url('/register') }}" class="welcome-btn-primary">
+      🎉 Commencer
+    </a>
+    <a href="{{ url('/login') }}" class="welcome-btn-ghost">
+      Déjà inscrit ? Se connecter
+    </a>
+  </div>
+
+  <div class="welcome-stats">
+    <div class="welcome-stat">
+      <span class="welcome-stat-num">100%</span>
+      <span class="welcome-stat-label">Gratuit</span>
+    </div>
+    <div class="welcome-stat-sep"></div>
+    <div class="welcome-stat">
+      <span class="welcome-stat-num">+5</span>
+      <span class="welcome-stat-label">Lots à gagner</span>
+    </div>
+    <div class="welcome-stat-sep"></div>
+    <div class="welcome-stat">
+      <span class="welcome-stat-num">1</span>
+      <span class="welcome-stat-label">Participation</span>
+    </div>
+  </div>
+
+  <p class="login-copyright">© 2025 EPA — Accès sécurisé</p>
+</div>
+
 @endsection
